@@ -1,0 +1,105 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  passwordHash  String
+  mfaSecret     String?
+  phone         String?
+  phoneVerified Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  wallets       Wallet[]
+  alertRules    AlertRule[]
+  notifications Notification[]
+}
+
+model Wallet {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  address     String
+  chain       String
+  label       String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  transactions Transaction[]
+  alertRules    AlertRule[]
+
+  @@unique([userId, address, chain])
+}
+
+model Transaction {
+  id            String   @id @default(cuid())
+  walletId      String
+  wallet        Wallet   @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  hash          String
+  type          String
+  value         String
+  token         String
+  fee           String?
+  timestamp     DateTime
+  fromAddress   String?
+  toAddress     String?
+  createdAt     DateTime @default(now())
+
+  notifications Notification[]
+
+  @@unique([walletId, hash])
+}
+
+model AlertRule {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  walletId    String
+  wallet      Wallet   @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  type        String   // in, out, both
+  channel     String   // email, whatsapp, both
+  threshold   String?  // minimum value
+  thresholdType String @default("eth") // eth, usd
+  token       String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  notifications Notification[]
+}
+
+model Notification {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  alertRuleId String?
+  alertRule   AlertRule? @relation(fields: [alertRuleId], references: [id], onDelete: SetNull)
+  transactionId String?
+  transaction Transaction? @relation(fields: [transactionId], references: [id], onDelete: SetNull)
+  channel     String   // email, whatsapp
+  message     String
+  isRead      Boolean  @default(false)
+  sentAt      DateTime @default(now())
+  createdAt   DateTime @default(now())
+}
+
+model Label {
+  id          String   @id @default(cuid())
+  address     String
+  chain       String
+  name        String
+  type        String
+  isVerified  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@unique([address, chain])
+}

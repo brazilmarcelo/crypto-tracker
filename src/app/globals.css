@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --primary: 0 109 106;
+    --accent: 47 230 166;
+    --warning: 255 181 69;
+  }
+  
+  body {
+    @apply bg-dark text-white antialiased;
+  }
+}
+
+@layer utilities {
+  .font-mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+}
