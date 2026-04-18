@@ -45,7 +45,16 @@ NEXTAUTH_URL="http://localhost:3000"
 ETHERSCAN_API_KEY="..."
 WUZAPI_URL="https://wapi.aiude.com.br"
 WUZAPI_TOKEN="..."
+CRON_SECRET="secure-random-string"
 ```
+
+## Cron Job (External Service)
+
+Use https://console.cron-job.org to trigger transaction checks:
+
+**URL:** `https://your-domain.com/api/cron/check?secret=YOUR_CRON_SECRET`
+
+**Schedule:** Every 20 minutes
 
 ## API Endpoints
 
