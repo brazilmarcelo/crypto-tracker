@@ -4,23 +4,27 @@ import { getEthereumTransactions, normalizeEtherscanTx } from '@/lib/etherscan'
 import { getBitcoinTransactions, normalizeBlockchainTx } from '@/lib/blockchain'
 import { sendWhatsAppMessage } from '@/lib/whatsapp'
 
-const APP_URL = process.env.NEXTAUTH_URL || 'https://crypto-tracker.vercel.app'
+const APP_URL = process.env.NEXTAUTH_URL || 'https://crypto-tracker-smoky-chi.vercel.app'
 
 function createTransactionAlertMessage(type: string, value: string, token: string, label: string, address: string, url: string) {
   const direction = type === 'in' ? 'received' : 'sent'
   return `🔔 *CryptoTracker Alert*\n\nYou ${direction} ${value} ${token}\n\nWallet: ${label}\n${address.slice(0, 6)}...${address.slice(-4)}\n\nView: ${url}/wallets`
 }
 
-export async function POST(req: Request) {
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url)
+  const secret = searchParams.get('secret')
+  
+  if (secret !== process.env.CRON_SECRET) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+  
   try {
-    const body = await req.json()
-    
-    if (body.secret !== process.env.CRON_SECRET) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
     const users = await prisma.user.findMany({
-      where: { phone: { not: null } },
+      where: { 
+        phone: { not: null },
+        phoneVerified: true
+      },
       include: {
         wallets: {
           where: { isActive: true },
@@ -42,16 +46,23 @@ export async function POST(req: Request) {
           a.channel === 'whatsapp' || a.channel === 'both'
         )
         
-        if (activeAlerts.length === 0) continue
+        if (activeAlerts.length === 0) {
+          totalChecked++
+          continue
+        }
 
         let txs: any[] = []
         
-        if (wallet.chain === 'ethereum') {
-          const apiTxs = await getEthereumTransactions(wallet.address)
-          txs = apiTxs.map(normalizeEtherscanTx)
-        } else if (wallet.chain === 'bitcoin') {
-          const apiTxs = await getBitcoinTransactions(wallet.address)
-          txs = apiTxs.map(tx => normalizeBlockchainTx(tx, wallet.address))
+        try {
+          if (wallet.chain === 'ethereum') {
+            const apiTxs = await getEthereumTransactions(wallet.address)
+            txs = apiTxs.map(normalizeEtherscanTx)
+          } else if (wallet.chain === 'bitcoin') {
+            const apiTxs = await getBitcoinTransactions(wallet.address)
+            txs = apiTxs.map(tx => normalizeBlockchainTx(tx, wallet.address))
+          }
+        } catch (e) {
+          console.error(`Error fetching txs for ${wallet.address}:`, e)
         }
 
         const lastTxInDb = await prisma.transaction.findFirst({
@@ -63,7 +74,10 @@ export async function POST(req: Request) {
           ? txs.filter((tx: any) => new Date(tx.timestamp) > new Date(lastTxInDb.timestamp))
           : txs.slice(0, 5)
 
-        if (newTxs.length === 0) continue
+        if (newTxs.length === 0) {
+          totalChecked++
+          continue
+        }
 
         for (const tx of newTxs) {
           const shouldAlert = activeAlerts.some((alert: any) => {
@@ -82,37 +96,51 @@ export async function POST(req: Request) {
               wallet.label || 'Wallet', wallet.address, APP_URL
             )
 
-            const sent = await sendWhatsAppMessage({ to: user.phone, body: message })
-            
-            if (sent) {
-              await prisma.notification.create({
-                data: {
-                  userId: user.id,
-                  alertRuleId: activeAlerts[0].id,
-                  channel: 'whatsapp',
-                  message,
-                  sentAt: new Date()
-                }
-              })
-              totalAlerts++
+            try {
+              const sent = await sendWhatsAppMessage({ to: user.phone, body: message })
+              
+              if (sent) {
+                await prisma.notification.create({
+                  data: {
+                    userId: user.id,
+                    alertRuleId: activeAlerts[0].id,
+                    channel: 'whatsapp',
+                    message,
+                    sentAt: new Date()
+                  }
+                })
+                totalAlerts++
+              }
+            } catch (e) {
+              console.error('Error sending WhatsApp:', e)
             }
           }
         }
 
         if (txs.length > 0) {
           for (const tx of txs) {
-            const existing = await prisma.transaction.findFirst({
-              where: { walletId: wallet.id, hash: tx.hash }
-            })
-            
-            if (!existing) {
-              await prisma.transaction.create({
-                data: { 
-                  ...tx, 
-                  walletId: wallet.id, 
-                  timestamp: new Date(tx.timestamp) 
-                }
+            try {
+              const existing = await prisma.transaction.findFirst({
+                where: { walletId: wallet.id, hash: tx.hash }
               })
+              
+              if (!existing) {
+                await prisma.transaction.create({
+                  data: { 
+                    walletId: wallet.id,
+                    hash: tx.hash,
+                    type: tx.type,
+                    value: tx.value,
+                    token: tx.token,
+                    fee: tx.fee || '0',
+                    timestamp: new Date(tx.timestamp),
+                    fromAddress: tx.fromAddress || null,
+                    toAddress: tx.toAddress || null
+                  }
+                })
+              }
+            } catch (e) {
+              console.error('Error saving tx:', e)
             }
           }
         }
@@ -131,15 +159,4 @@ export async function POST(req: Request) {
     console.error('Cron error:', error)
     return NextResponse.json({ error: 'Internal error' }, { status: 500 })
   }
-}
-
-export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url)
-  const secret = searchParams.get('secret')
-  
-  if (secret !== process.env.CRON_SECRET) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-  
-  return POST(req)
 }
