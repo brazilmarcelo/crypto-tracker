@@ -23,7 +23,7 @@ export async function GET(req: Request) {
     const users = await prisma.user.findMany({
       where: { 
         phone: { not: null },
-        phoneVerified: true
+        phoneVerified: false
       },
       include: {
         wallets: {
