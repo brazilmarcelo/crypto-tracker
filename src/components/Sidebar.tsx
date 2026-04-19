@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { twMerge } from 'tailwind-merge'
-import { LayoutDashboard, Wallet, Bell, Settings, Tag } from 'lucide-react'
+import { LayoutDashboard, Wallet, Bell, Settings, Tag, X } from 'lucide-react'
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -14,11 +14,23 @@ const navItems = [
   { href: '/settings', label: 'Settings', icon: Settings },
 ]
 
-export function Sidebar() {
+interface SidebarProps {
+  onClose?: () => void
+}
+
+export function Sidebar({ onClose }: SidebarProps) {
   const pathname = usePathname()
 
   return (
     <aside className="w-64 bg-dark-light border-r border-muted min-h-screen p-4">
+      {onClose && (
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 p-1 text-gray-400 hover:text-white lg:hidden"
+        >
+          <X size={24} />
+        </button>
+      )}
       <div className="mb-8">
         <h1 className="text-xl font-bold text-primary">CryptoTracker</h1>
       </div>

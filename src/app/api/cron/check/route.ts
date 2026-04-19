@@ -35,13 +35,20 @@ export async function GET(req: Request) {
       }
     })
 
+    console.log('Users found with phoneVerified:', users.length)
+    console.log('Sample user:', users[0] ? { id: users[0].id, phone: users[0].phone, wallets: users[0].wallets.length } : 'none')
+
     let totalChecked = 0
     let totalAlerts = 0
 
     for (const user of users) {
+      console.log('Processing user:', user.id, 'wallets:', user.wallets.length)
+      
       if (!user.phone || user.phone.length < 10) continue
 
       for (const wallet of user.wallets) {
+        console.log('Wallet:', wallet.address, 'alerts:', wallet.alertRules.length)
+        
         const activeAlerts = wallet.alertRules.filter((a: any) => 
           a.channel === 'whatsapp' || a.channel === 'both'
         )
@@ -74,12 +81,16 @@ export async function GET(req: Request) {
           ? txs.filter((tx: any) => new Date(tx.timestamp) > new Date(lastTxInDb.timestamp))
           : txs.slice(0, 5)
 
+        console.log(`Wallet ${wallet.address}: ${txs.length} txs in API, ${newTxs.length} new txs, lastTxInDb: ${lastTxInDb?.timestamp || 'none'}`)
+
         if (newTxs.length === 0) {
           totalChecked++
           continue
         }
 
         for (const tx of newTxs) {
+          console.log(`  New tx: ${tx.type} ${tx.value} ${tx.token}`)
+          
           const shouldAlert = activeAlerts.some((alert: any) => {
             if (alert.type === 'both' || alert.type === tx.type) {
               if (alert.threshold) {
@@ -90,14 +101,19 @@ export async function GET(req: Request) {
             return false
           })
 
+          console.log(`  Alert match: ${shouldAlert}, activeAlerts: ${activeAlerts.length}`)
+
           if (shouldAlert) {
             const message = createTransactionAlertMessage(
               tx.type, tx.value, tx.token,
               wallet.label || 'Wallet', wallet.address, APP_URL
             )
 
+            console.log(`  Sending WhatsApp to ${user.phone}:`, message.substring(0, 50) + '...')
+            
             try {
               const sent = await sendWhatsAppMessage({ to: user.phone, body: message })
+              console.log(`  WhatsApp send result: ${sent}`)
               
               if (sent) {
                 await prisma.notification.create({
