@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { twMerge } from 'tailwind-merge'
-import { LayoutDashboard, Wallet, Bell, Settings, Tag, X } from 'lucide-react'
+import { LayoutDashboard, Wallet, Bell, Settings, Tag, X, ArrowRightLeft } from 'lucide-react'
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -11,6 +11,7 @@ const navItems = [
   { href: '/alerts', label: 'Alerts', icon: Bell },
   { href: '/notifications', label: 'Notifications', icon: Bell },
   { href: '/labels', label: 'Labels', icon: Tag },
+  { href: '/tracer', label: 'Tracer Tool', icon: ArrowRightLeft },
   { href: '/settings', label: 'Settings', icon: Settings },
 ]
 

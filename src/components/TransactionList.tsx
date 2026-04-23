@@ -1,7 +1,8 @@
 'use client'
 
-import { ArrowUpRight, ArrowDownLeft } from 'lucide-react'
+import { ArrowUpRight, ArrowDownLeft, Building2, Wallet, FileCode2 } from 'lucide-react'
 import { useState } from 'react'
+import { identifyAddress } from '@/lib/labels'
 
 interface Transaction {
   id: string
@@ -55,6 +56,13 @@ function formatTime(timestamp: string) {
 
 export function TransactionRow({ tx, onClick }: { tx: Transaction | TransactionWithDetails; onClick?: () => void }) {
   const isIn = tx.type === 'in'
+  
+  // Identify the counterparty
+  const counterpartyAddress = isIn ? tx.fromAddress : tx.toAddress
+  const entity = identifyAddress(counterpartyAddress)
+
+  const EntityIcon = entity.type === 'exchange' ? Building2 : 
+                     entity.type === 'contract' ? FileCode2 : Wallet
 
   return (
     <div 
@@ -70,7 +78,19 @@ export function TransactionRow({ tx, onClick }: { tx: Transaction | TransactionW
           )}
         </div>
         <div>
-          <p className="font-medium capitalize">{isIn ? 'Received' : 'Sent'}</p>
+          <div className="flex items-center gap-2">
+            <p className="font-medium capitalize">{isIn ? 'Received' : 'Sent'}</p>
+            {counterpartyAddress && (
+              <span className={`flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                entity.type === 'exchange' ? 'bg-blue-500/20 text-blue-400' :
+                entity.type === 'contract' ? 'bg-purple-500/20 text-purple-400' :
+                'bg-gray-500/20 text-gray-400'
+              }`}>
+                <EntityIcon size={10} />
+                {entity.name}
+              </span>
+            )}
+          </div>
           <p className="text-sm text-gray-400 font-mono">{shortenHash(tx.hash)}</p>
           <p className="text-xs text-gray-500 mt-1">
             {formatDate(tx.timestamp)} at {formatTime(tx.timestamp)}
@@ -176,7 +196,17 @@ export function TransactionModal({ tx, isOpen, onClose }: {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <p className="text-gray-400 text-sm mb-2">From (Sender)</p>
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-gray-400 text-sm">From (Sender)</p>
+                {tx.fromAddress && (() => {
+                  const entity = identifyAddress(tx.fromAddress)
+                  return (
+                    <span className="text-xs bg-dark-light px-2 py-1 rounded text-gray-300">
+                      {entity.name}
+                    </span>
+                  )
+                })()}
+              </div>
               <div className="bg-dark p-3 rounded-lg">
                 <p className="font-mono text-sm break-all">{tx.fromAddress || 'N/A'}</p>
                 <a 
@@ -191,7 +221,17 @@ export function TransactionModal({ tx, isOpen, onClose }: {
             </div>
 
             <div>
-              <p className="text-gray-400 text-sm mb-2">To (Recipient)</p>
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-gray-400 text-sm">To (Recipient)</p>
+                {tx.toAddress && (() => {
+                  const entity = identifyAddress(tx.toAddress)
+                  return (
+                    <span className="text-xs bg-dark-light px-2 py-1 rounded text-gray-300">
+                      {entity.name}
+                    </span>
+                  )
+                })()}
+              </div>
               <div className="bg-dark p-3 rounded-lg">
                 <p className="font-mono text-sm break-all">{tx.toAddress || 'N/A'}</p>
                 <a 
