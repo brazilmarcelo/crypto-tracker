@@ -10,7 +10,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const { transactionId, walletId, type, value, token, hash } = await req.json()
+  const { transactionId, walletId, type, value, token, hash, timestamp } = await req.json()
 
   if (!transactionId || !walletId || !value) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
@@ -54,7 +54,8 @@ export async function POST(req: Request) {
       token,
       'My Wallet',
       walletId,
-      appUrl
+      appUrl,
+      timestamp || new Date()
     )
 
     if (alert.channel === 'whatsapp' || alert.channel === 'both') {

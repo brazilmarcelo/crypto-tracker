@@ -2,14 +2,9 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getEthereumTransactions, normalizeEtherscanTx } from '@/lib/etherscan'
 import { getBitcoinTransactions, normalizeBlockchainTx } from '@/lib/blockchain'
-import { sendWhatsAppMessage } from '@/lib/whatsapp'
+import { sendWhatsAppMessage, createTransactionAlertMessage } from '@/lib/whatsapp'
 
 const APP_URL = process.env.NEXTAUTH_URL || 'https://crypto-tracker-smoky-chi.vercel.app'
-
-function createTransactionAlertMessage(type: string, value: string, token: string, label: string, address: string, url: string) {
-  const direction = type === 'in' ? 'received' : 'sent'
-  return `🔔 *CryptoTracker Alert*\n\nYou ${direction} ${value} ${token}\n\nWallet: ${label}\n${address.slice(0, 6)}...${address.slice(-4)}\n\nView: ${url}/wallets`
-}
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url)
@@ -106,7 +101,7 @@ export async function GET(req: Request) {
           if (shouldAlert) {
             const message = createTransactionAlertMessage(
               tx.type, tx.value, tx.token,
-              wallet.label || 'Wallet', wallet.address, APP_URL
+              wallet.label || 'Wallet', wallet.address, APP_URL, tx.timestamp
             )
 
             console.log(`  Sending WhatsApp to ${user.phone}:`, message.substring(0, 50) + '...')

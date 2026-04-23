@@ -64,14 +64,21 @@ export function createTransactionAlertMessage(
   token: string,
   walletLabel: string,
   walletAddress: string,
-  appUrl: string
+  appUrl: string,
+  timestamp?: string | Date
 ): string {
   const direction = type === 'in' ? 'RECEBIDO' : 'ENVIADO'
   const emoji = type === 'in' ? '📥' : '📤'
   
+  let timeString = ''
+  if (timestamp) {
+    const date = new Date(timestamp)
+    timeString = `\nData/Hora: ${date.toLocaleString('pt-BR')}`
+  }
+  
   return `${emoji} *Crypto Alert*
 
-*${direction} ${parseFloat(value).toFixed(6)} ${token}*
+*${direction} ${parseFloat(value).toFixed(6)} ${token}*${timeString}
 
 Carteira: ${walletLabel || 'Unknown'}
 Endereço: ${walletAddress.substring(0, 6)}...${walletAddress.substring(38)}
