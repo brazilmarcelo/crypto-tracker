@@ -7,7 +7,8 @@ A web application to track cryptocurrency wallets (Ethereum + Bitcoin) with tran
 - **Authentication**: Login/signup with NextAuth.js (credentials)
 - **Dashboard**: Overview of wallets, balances, recent transactions
 - **Wallet Management**: Add, view, delete ETH/BTC wallets
-- **Transaction History**: Real-time transactions from Etherscan and Blockchain.com
+- **Transaction History**: Real-time transactions from Etherscan and Blockchain.com (includes Entity Tagging for Exams/Cold Wallets)
+- **Capital Tracer Tool**: Interactive graph to trace funds and follow sequential outbound transactions across multiple hops.
 - **WhatsApp Alerts**: Transaction notifications via WuzAPI
 - **Cron Job**: Automatic transaction checking every 20 minutes (via cron-job.org)
 
@@ -94,6 +95,7 @@ Add these in Vercel → Project Settings → Environment Variables:
 - `GET /api/wallets/[id]/details` - Wallet details + stats + chart data
 - `GET /api/transactions` - Transaction history (per wallet)
 - `GET /api/transactions/all` - All transactions from all wallets
+- `GET /api/tracer` - Trace API to fetch outbound transactions for visualization
 - `GET /api/alerts` - List alert rules
 - `POST /api/alerts` - Create alert rule
 - `PATCH /api/alerts/[id]` - Update alert
@@ -123,6 +125,7 @@ src/
 │   ├── (dashboard)/          # Protected pages
 │   │   ├── dashboard/         # Main dashboard
 │   │   ├── wallets/           # Wallet management
+│   │   ├── tracer/            # Capital Tracer Tool
 │   │   ├── alerts/            # Alert rules
 │   │   ├── notifications/     # Notification history
 │   │   └── settings/          # User settings
