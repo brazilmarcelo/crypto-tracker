@@ -39,7 +39,7 @@ export async function GET(
     const wei = await getEthereumBalance(wallet.address)
     balance = (parseInt(wei) / 1e18).toFixed(6)
     const txs = await getEthereumTransactions(wallet.address)
-    transactions = txs.map(normalizeEtherscanTx)
+    transactions = txs.map(tx => normalizeEtherscanTx(tx, wallet.address))
   } else if (wallet.chain === 'bitcoin') {
     const satoshis = await getBitcoinBalance(wallet.address)
     balance = (satoshis / 1e8).toFixed(8)

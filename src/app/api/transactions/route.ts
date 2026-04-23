@@ -35,7 +35,7 @@ export async function GET(req: Request) {
   try {
     if (wallet.chain === 'ethereum') {
       const txs = await getEthereumTransactions(wallet.address)
-      transactions = txs.map(normalizeEtherscanTx)
+      transactions = txs.map(tx => normalizeEtherscanTx(tx, wallet.address))
       
       if (transactions.length > 0 && !refresh) {
         await prisma.transaction.createMany({

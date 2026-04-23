@@ -17,7 +17,7 @@ export async function GET(request: Request) {
     // Normalize transactions and keep only outgoing (where address is the sender)
     const addressLower = address.toLowerCase()
     let outgoingTxs = txs
-      .map(normalizeEtherscanTx)
+      .map((tx) => normalizeEtherscanTx(tx, address))
       .filter((tx) => tx.fromAddress?.toLowerCase() === addressLower)
       
     // If we only want to trace funds that moved AFTER a specific date

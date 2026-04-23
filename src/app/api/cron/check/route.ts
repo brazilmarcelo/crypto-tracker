@@ -63,7 +63,7 @@ export async function GET(req: Request) {
         try {
           if (wallet.chain === 'ethereum') {
             const apiTxs = await getEthereumTransactions(wallet.address)
-            txs = apiTxs.map(normalizeEtherscanTx)
+            txs = apiTxs.map(tx => normalizeEtherscanTx(tx, wallet.address))
           } else if (wallet.chain === 'bitcoin') {
             const apiTxs = await getBitcoinTransactions(wallet.address)
             txs = apiTxs.map(tx => normalizeBlockchainTx(tx, wallet.address))

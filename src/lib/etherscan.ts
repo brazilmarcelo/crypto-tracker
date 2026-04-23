@@ -80,10 +80,19 @@ export async function getEthereumBalance(address: string, chainId: string = '1')
   }
 }
 
-export function normalizeEtherscanTx(tx: EtherscanTx) {
+export function normalizeEtherscanTx(tx: EtherscanTx, trackedAddress?: string) {
   const fromLower = tx.from?.toLowerCase() || ''
   const toLower = tx.to?.toLowerCase() || ''
-  const isIn = toLower !== fromLower && toLower !== ''
+  
+  let isIn = true
+  if (trackedAddress) {
+    const trackedLower = trackedAddress.toLowerCase()
+    // If the sender is the tracked address, it is an OUTBOUND transaction (isIn = false)
+    isIn = fromLower !== trackedLower
+  } else {
+    // Fallback logic if trackedAddress is not provided
+    isIn = toLower !== fromLower && toLower !== ''
+  }
 
   return {
     hash: tx.hash,
