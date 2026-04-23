@@ -7,9 +7,9 @@ A web application to track cryptocurrency wallets (Ethereum + Bitcoin) with tran
 - **Authentication**: Login/signup with NextAuth.js (credentials)
 - **Dashboard**: Overview of wallets, balances, recent transactions
 - **Wallet Management**: Add, view, delete ETH/BTC wallets
-- **Transaction History**: Real-time transactions from Etherscan and Blockchain.com (includes Entity Tagging for Exams/Cold Wallets)
+- **Transaction History**: Real-time transactions from Etherscan and Blockchain.com (incl. accurate Inbound/Outbound routing heuristics and Entity Tagging for Exams/Cold Wallets)
 - **Capital Tracer Tool**: Interactive graph to trace funds and follow sequential outbound transactions across multiple hops.
-- **WhatsApp Alerts**: Transaction notifications via WuzAPI
+- **WhatsApp Alerts**: High-fidelity transaction notifications via WuzAPI (includes localized Data/Hora timestamps)
 - **Cron Job**: Automatic transaction checking every 20 minutes (via cron-job.org)
 
 ## Stack
