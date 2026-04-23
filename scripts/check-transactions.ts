@@ -33,7 +33,7 @@ async function checkWallets() {
 
       if (wallet.chain === 'ethereum') {
         const txs: EtherscanTx[] = await getEthereumTransactions(wallet.address)
-        newTxs = txs.map(normalizeEtherscanTx)
+        newTxs = txs.map(tx => normalizeEtherscanTx(tx, wallet.address))
       } else if (wallet.chain === 'bitcoin') {
         const txs = await getBitcoinTransactions(wallet.address)
         newTxs = txs.map(tx => normalizeBlockchainTx(tx, wallet.address))
